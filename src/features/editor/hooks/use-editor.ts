@@ -48,7 +48,7 @@ export const useEditor = () => {
       const test = new fabric.Rect({
         width: 100,
         height: 100,
-        fill: "red",
+        fill: "black",
       });
 
       initialCanvas.setWidth(initialContainer.offsetWidth);
