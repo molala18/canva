@@ -9,11 +9,13 @@ import { IoTriangle } from "react-icons/io5";
 import { FaDiamond } from "react-icons/fa6";
 
 interface ShapeSidebarProps {
+  editor: any; // Replace with the actual type of your editor
   activeTool: ActiveTools;
   onChangeActiveTool: (tool: ActiveTools) => void;
 }
 
 export const ShapeSideBar = ({
+  editor,
   activeTool,
   onChangeActiveTool,
 }: ShapeSidebarProps) => {
@@ -33,13 +35,35 @@ export const ShapeSideBar = ({
       />
       <ScrollArea>
         <div className="p-4 grid grid-cols-3 gap-4">
-          <ShapeTool icon={FaCircle} onClick={() => {}} />
-          <ShapeTool icon={FaSquare} onClick={() => {}} />
-          <ShapeTool icon={FaSquareFull} onClick={() => {}} />
-          <ShapeTool icon={IoTriangle} onClick={() => {}} />
+          <ShapeTool
+            icon={FaCircle}
+            onClick={() => {
+              editor?.addCircle();
+            }}
+          />
+          <ShapeTool
+            icon={FaSquare}
+            onClick={() => {
+              editor.addSquare();
+            }}
+          />
+          <ShapeTool
+            icon={FaSquareFull}
+            onClick={() => {
+              editor.addSquareFull();
+            }}
+          />
           <ShapeTool
             icon={IoTriangle}
-            onClick={() => {}}
+            onClick={() => {
+              editor.addTriangle();
+            }}
+          />
+          <ShapeTool
+            icon={IoTriangle}
+            onClick={() => {
+              editor.addTriangleReversed();
+            }}
             iconClassName="rotate-180"
           />
           <ShapeTool icon={FaDiamond} onClick={() => {}} />

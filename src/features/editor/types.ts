@@ -1,3 +1,5 @@
+import { fabric } from "fabric";
+
 export type ActiveTools =
   | "select"
   | "images"
@@ -15,3 +17,17 @@ export type ActiveTools =
   | "fill"
   | "draw"
   | "design";
+
+export type BuildEditorProps = {
+  canvas: fabric.Canvas;
+};
+
+export interface Editor {
+  addCircle: () => void;
+  // addSquare: () => void;
+  // addSquareFull: () => void;
+  // addTriangle: () => void;
+  // addTriangleReversed: () => void;
+  // addDiamond: () => void;
+  // Add other methods as needed
+}

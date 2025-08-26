@@ -27,7 +27,7 @@ const EditorProjectIdPage = () => {
     },
     [activeTool]
   );
-  const { init } = useEditor();
+  const { init, editor } = useEditor();
   const cnavasRef = useRef(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +52,7 @@ const EditorProjectIdPage = () => {
           onChangeActiveTool={onChangeActiveTool}
         />
         <ShapeSideBar
+          editor={editor}
           activeTool={activeTool}
           onChangeActiveTool={onChangeActiveTool}
         />
