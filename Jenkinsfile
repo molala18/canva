@@ -1,22 +1,32 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'NODE_HOME'
+    }
+
     stages {
-        stage('Greet') {
+        stage('Install dependencies') {
             steps {
-                echo 'Hello from Jenkins!'
+                sh 'npm install'
             }
         }
 
-        stage('Date') {
+        stage('Build') {
             steps {
-                sh 'date'
+                sh 'npm run build'
             }
         }
 
-        stage('Goodbye') {
+        stage('Test') {
             steps {
-                echo 'Goodbye from Jenkins lala to see poll!'
+                sh 'npm test || echo "No tests configured"'
+            }
+        }
+
+        stage('Deploy (dummy)') {
+            steps {
+                echo 'Here you would deploy your Next.js build'
             }
         }
     }
