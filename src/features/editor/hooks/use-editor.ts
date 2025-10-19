@@ -17,6 +17,61 @@ const buildEditor = ({ canvas }: BuildEditorProps): Editor => {
       canvas.add(object);
       canvas.setActiveObject(object);
     },
+    addSquare: () => {
+      const object = new fabric.Rect({
+        height: 100,
+        width: 100,
+        fill: "black",
+        stroke: "black",
+        strokeWidth: 5,
+      });
+      canvas.add(object);
+      canvas.setActiveObject(object);
+    },
+    addSquareFull: () => {
+      const object = new fabric.Rect({
+        height: 100,
+        width: 100,
+        fill: "black",
+      });
+      canvas.add(object);
+      canvas.setActiveObject(object);
+    },
+    addTriangle: () => {
+      const object = new fabric.Triangle({
+        height: 100,
+        width: 100,
+        fill: "black",
+        stroke: "black",
+        strokeWidth: 5,
+      });
+      canvas.add(object);
+      canvas.setActiveObject(object);
+    },
+    addTriangleReversed: () => {
+      const object = new fabric.Triangle({
+        height: 100,
+        width: 100,
+        fill: "black",
+        stroke: "black",
+        strokeWidth: 5,
+        angle: 180,
+      });
+      canvas.add(object);
+      canvas.setActiveObject(object);
+    },
+    addDiamond: () => {
+      const object = new fabric.Rect({
+        height: 100,
+        width: 100,
+        fill: "black",
+        stroke: "black",
+        strokeWidth: 5,
+        angle: 45,
+      });
+      canvas.add(object);
+      canvas.setActiveObject(object);
+    },
   };
 };
 export const useEditor = () => {

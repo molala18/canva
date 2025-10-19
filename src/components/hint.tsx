@@ -1,7 +1,6 @@
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -23,19 +22,17 @@ export const Hint = ({
   alignOffset,
 }: HintProps) => {
   return (
-    <TooltipProvider>
-      <Tooltip delayDuration={100}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent
-          side={side}
-          align={align}
-          sideOffset={sideOffset}
-          alignOffset={alignOffset}
-          className="text-white bg-slate-800 border-slate-800"
-        >
-          <p className="font-semibold capitalize">{label}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+        alignOffset={alignOffset}
+        className="text-white bg-slate-800 border-slate-800"
+      >
+        <p className="font-semibold capitalize">{label}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };

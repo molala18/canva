@@ -20,7 +20,6 @@ import { Separator } from "@/components/ui/separator";
 import { Hint } from "@/components/hint";
 import { BsCloudCheck } from "react-icons/bs";
 import { ActiveTools } from "../types";
-import { on } from "events";
 import { cn } from "@/lib/utils";
 
 interface NavBarProps {
@@ -34,7 +33,7 @@ export const NavBar = ({ activeTool, onChangeActiveTool }: NavBarProps) => {
       <Logo />
       <div className="w-full h-full gap-x-1 flex items-center">
         <DropdownMenu modal={false}>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Button size="sm" variant="ghost">
               File
               <ChevronDown className="ml-2 size-4" />

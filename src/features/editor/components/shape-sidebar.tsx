@@ -44,29 +44,34 @@ export const ShapeSideBar = ({
           <ShapeTool
             icon={FaSquare}
             onClick={() => {
-              editor.addSquare();
+              editor?.addSquare();
             }}
           />
           <ShapeTool
             icon={FaSquareFull}
             onClick={() => {
-              editor.addSquareFull();
+              editor?.addSquareFull();
             }}
           />
           <ShapeTool
             icon={IoTriangle}
             onClick={() => {
-              editor.addTriangle();
+              editor?.addTriangle();
             }}
           />
           <ShapeTool
             icon={IoTriangle}
             onClick={() => {
-              editor.addTriangleReversed();
+              editor?.addTriangleReversed();
             }}
             iconClassName="rotate-180"
           />
-          <ShapeTool icon={FaDiamond} onClick={() => {}} />
+          <ShapeTool
+            icon={FaDiamond}
+            onClick={() => {
+              editor?.addDiamond();
+            }}
+          />
         </div>
       </ScrollArea>
       <ToolSideBarClose onClick={onClose} />

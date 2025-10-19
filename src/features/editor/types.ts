@@ -24,10 +24,9 @@ export type BuildEditorProps = {
 
 export interface Editor {
   addCircle: () => void;
-  // addSquare: () => void;
-  // addSquareFull: () => void;
-  // addTriangle: () => void;
-  // addTriangleReversed: () => void;
-  // addDiamond: () => void;
-  // Add other methods as needed
+  addSquare: () => void;
+  addSquareFull: () => void;
+  addTriangle: () => void;
+  addTriangleReversed: () => void;
+  addDiamond: () => void;
 }
