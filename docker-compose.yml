@@ -8,4 +8,6 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - SERVER_ID=${SERVER_ID:-Unknown}
+      - SERVER_COLOR=${SERVER_COLOR:-#6b7280}
     command: ["yarn", "start"]
