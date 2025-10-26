@@ -1,0 +1,7 @@
+#### **`deployment/.gitignore`**
+```
+*.retry
+*.pyc
+__pycache__/
+.vault_password
+*.log

@@ -1,0 +1,11 @@
+---
+# Load balancer specific variables
+
+nginx_user: www-data
+nginx_worker_processes: auto
+nginx_worker_connections: 1024
+
+# Upstream app servers
+upstream_servers:
+  - { host: "10.10.67.156", port: 3000 }
+  - { host: "10.10.67.155", port: 3000 }
