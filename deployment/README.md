@@ -8,7 +8,7 @@ This directory contains Ansible automation for deploying the Canva app across mu
 - **1 Load Balancer VM**: Nginx reverse proxy with SSL and round-robin load balancing
 
 ```
-[Internet] → [Nginx LB:443] → [App1:3000] 
+[Internet] → [Nginx LB:443] → [App1:3000]
                             → [App2:3000]
 ```
 
@@ -52,11 +52,13 @@ upstream_servers:
 Choose one of two deployment options:
 
 **Option A: Standard (docker.io from apt)**
+
 ```bash
 ansible-playbook -i inventory/hosts.ini playbook.yml
 ```
 
 **Option B: Latest Docker (recommended)**
+
 ```bash
 ansible-playbook -i inventory/hosts.ini playbook-v2.yml
 ```
@@ -64,18 +66,24 @@ ansible-playbook -i inventory/hosts.ini playbook-v2.yml
 ## Playbooks
 
 ### `playbook.yml`
+
 Standard deployment using `docker.io` from Ubuntu apt repositories.
+
 - Uses `docker-compose` (v1 syntax)
 - Good for Ubuntu LTS compatibility
 
 ### `playbook-v2.yml`
+
 Modern deployment using Docker's official installation script.
+
 - Installs latest Docker Engine from `get.docker.com`
 - Uses `docker compose` (v2 syntax)
 - Recommended for production
 
 ### `cleanup-playbook.yml`
+
 **Complete cleanup** - removes everything installed by deployment:
+
 ```bash
 ansible-playbook -i inventory/hosts.ini cleanup-playbook.yml
 ```
@@ -85,6 +93,7 @@ ansible-playbook -i inventory/hosts.ini cleanup-playbook.yml
 ## What Gets Deployed
 
 ### App Servers
+
 1. Git (for cloning repository)
 2. Docker & Docker Compose
 3. Application code (cloned to `/root/canva`)
@@ -92,6 +101,7 @@ ansible-playbook -i inventory/hosts.ini cleanup-playbook.yml
 5. Docker container running Next.js app on port 3000
 
 ### Load Balancer
+
 1. Nginx web server
 2. SSL/TLS configuration (HTTPS)
 3. Round-robin load balancing
@@ -101,7 +111,9 @@ ansible-playbook -i inventory/hosts.ini cleanup-playbook.yml
 ## Configuration Files
 
 ### `group_vars/all.yml`
+
 Global variables for all servers:
+
 ```yaml
 domain_name: mohamedlala.online
 ssl_cert_path: /etc/letsencrypt/live/mohamedlala.online/fullchain.pem
@@ -112,19 +124,23 @@ app_directory: /opt/canva
 ```
 
 ### `group_vars/appservers.yml`
+
 App server specific configuration.
 
 ### `group_vars/loadbalancer.yml`
+
 Nginx upstream server configuration.
 
 ## Verification
 
 ### Test Connectivity
+
 ```bash
 ansible all -i inventory/hosts.ini -m ping
 ```
 
 ### Check Application Servers
+
 ```bash
 # SSH to app server
 ssh root@YOUR_APP_IP
@@ -137,6 +153,7 @@ docker logs myappcanva
 ```
 
 ### Check Load Balancer
+
 ```bash
 # SSH to load balancer
 ssh root@YOUR_LB_IP
@@ -152,6 +169,7 @@ tail -f /var/log/nginx/access.log
 ```
 
 ### Test Load Balancing
+
 Visit your domain and refresh multiple times. You should see different `SERVER_ID` values:
 
 ```bash
@@ -188,21 +206,27 @@ The playbook will pull the latest code and rebuild containers.
 ## Troubleshooting
 
 ### Deployment fails
+
 Run with verbose output:
+
 ```bash
 ansible-playbook -i inventory/hosts.ini playbook-v2.yml -vvv
 ```
 
 ### Git clone fails
+
 Ensure servers have internet access and can reach GitHub.
 
 ### Docker build fails
+
 Check Docker service: `systemctl status docker`
 
 ### Nginx won't start
+
 Verify SSL certificate paths exist and are readable.
 
 ### Load balancing not working
+
 Check upstream server IPs in Nginx configuration match your app servers.
 
 ## Common Commands
@@ -238,12 +262,14 @@ ansible appservers -i inventory/hosts.ini -a "docker ps"
 ## Maintenance
 
 ### Renew SSL Certificates
+
 ```bash
 certbot renew
 systemctl reload nginx
 ```
 
 ### Update Docker Images
+
 ```bash
 cd /root/canva
 docker compose pull
@@ -251,12 +277,15 @@ docker compose up -d
 ```
 
 ### View Application Logs
+
 ```bash
 docker logs -f myappcanva
 ```
 
 ### Backup
+
 Important directories to backup:
+
 - `/root/canva` - Application code
 - `/etc/nginx/sites-available` - Nginx config
 - `/etc/letsencrypt` - SSL certificates
