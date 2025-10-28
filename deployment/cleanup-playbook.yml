@@ -3,27 +3,74 @@
   hosts: appservers
   become: true
   vars:
-    app_dir: /opt/canva
+    app_dir: /root/canva
 
   tasks:
-    - name: Check if application directory exists
-      stat:
-        path: "{{ app_dir }}"
-      register: app_dir_stat
-
-    - name: Stop and remove Docker containers
+    - name: Stop and remove all Docker containers using docker-compose
       command: docker-compose down
       args:
         chdir: "{{ app_dir }}"
-      when: app_dir_stat.stat.exists
       ignore_errors: yes
 
-    - name: Remove all Docker containers (force)
+    - name: Stop and remove all Docker containers using docker compose (v2)
+      command: docker compose down
+      args:
+        chdir: "{{ app_dir }}"
+      ignore_errors: yes
+
+    - name: Stop all running containers
+      shell: docker stop $(docker ps -aq) 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Remove all containers
       shell: docker rm -f $(docker ps -aq) 2>/dev/null || true
       ignore_errors: yes
 
-    - name: Remove Docker images related to the app
-      shell: docker rmi -f $(docker images -q canva*) 2>/dev/null || true
+    - name: Remove all images
+      shell: docker rmi -f $(docker images -aq) 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Remove all volumes
+      shell: docker volume rm $(docker volume ls -q) 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Remove all networks
+      shell: docker network prune -f 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Full Docker system prune
+      command: docker system prune -af --volumes
+      ignore_errors: yes
+
+    - name: Stop Docker service
+      systemd:
+        name: docker
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove Docker packages
+      apt:
+        name:
+          - docker.io
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+          - docker-compose
+        state: absent
+        autoremove: yes
+        purge: yes
+      ignore_errors: yes
+
+    - name: Remove Docker directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/lib/docker
+        - /var/lib/containerd
+        - /etc/docker
+        - /usr/local/bin/docker-compose
       ignore_errors: yes
 
     - name: Remove application directory
@@ -31,31 +78,11 @@
         path: "{{ app_dir }}"
         state: absent
 
-    - name: Remove .env file if exists
-      file:
-        path: "{{ app_dir }}/.env"
+    - name: Remove git
+      apt:
+        name: git
         state: absent
-      ignore_errors: yes
-
-    - name: Optional - Remove Docker (uncomment if needed)
-      # apt:
-      #   name:
-      #     - docker.io
-      #     - docker-compose
-      #   state: absent
-      #   autoremove: yes
-      debug:
-        msg: "Docker packages not removed. Uncomment task to remove."
-
-    - name: Optional - Remove git (uncomment if needed)
-      # apt:
-      #   name: git
-      #   state: absent
-      debug:
-        msg: "Git not removed. Uncomment task to remove."
-
-    - name: Clean up unused Docker resources
-      command: docker system prune -af --volumes
+        autoremove: yes
       ignore_errors: yes
 
 - name: Cleanup Nginx load balancer configuration
@@ -64,7 +91,7 @@
 
   tasks:
     - name: Stop Nginx service
-      service:
+      systemd:
         name: nginx
         state: stopped
       ignore_errors: yes
@@ -79,35 +106,26 @@
         path: /etc/nginx/sites-available/canva.conf
         state: absent
 
-    - name: Restore default Nginx site (optional)
-      file:
-        src: /etc/nginx/sites-available/default
-        dest: /etc/nginx/sites-enabled/default
-        state: link
-      ignore_errors: yes
-
-    - name: Optional - Remove Nginx (uncomment if needed)
-      # apt:
-      #   name: nginx
-      #   state: absent
-      #   autoremove: yes
-      debug:
-        msg: "Nginx not removed. Uncomment task to remove if complete removal is needed."
-
-    - name: Test Nginx configuration (if Nginx still installed)
-      command: nginx -t
-      ignore_errors: yes
-
-    - name: Restart Nginx if still installed
-      service:
+    - name: Remove Nginx completely
+      apt:
         name: nginx
-        state: restarted
+        state: absent
+        autoremove: yes
+        purge: yes
+
+    - name: Remove Nginx directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/nginx
+        - /var/log/nginx
+        - /var/www/html
       ignore_errors: yes
-      when: false # Set to true if you want to restart instead of remove
 
 - name: Display cleanup summary
   hosts: all
   tasks:
     - name: Cleanup complete
       debug:
-        msg: "Cleanup completed for {{ inventory_hostname }}"
+        msg: "Complete cleanup finished for {{ inventory_hostname }} - everything nuked!"

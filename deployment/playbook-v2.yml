@@ -16,20 +16,16 @@
         name: git
         state: present
 
-        ## Install Docker and docker-compose
-        ## curl -fsSL get.docker.com | sh
+    - name: Install Docker using convenience script
+      shell: curl -fsSL get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
 
-    - name: Install Docker
-      apt:
-        name:
-          - docker.io
-        state: present
-        update_cache: yes
-
-    - name: Install docker-compose
-      apt:
-        name: docker-compose
-        state: present
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
 
     - name: Add current user to docker group
       user:
@@ -65,7 +61,7 @@
         dest: "{{ app_dir }}/.env"
 
     - name: Build and start the app
-      command: docker-compose up -d --build
+      command: docker compose up -d --build
       args:
         chdir: "{{ app_dir }}"
 
@@ -82,7 +78,7 @@
   become: true
 
   tasks:
-    - name: Install Nginx inshallah
+    - name: Install Nginx
       apt:
         name: nginx
         state: present
