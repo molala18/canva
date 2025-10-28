@@ -1,0 +1,138 @@
+---
+- name: Deploy the app on the servers
+  hosts: appservers
+  become: true
+  vars:
+    repo_url: https://github.com/molala18/canva.git
+    app_dir: /opt/canva
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install git
+      apt:
+        name: git
+        state: present
+
+    - name: Install Docker inshallah
+      apt:
+        name:
+          - docker.io
+          - docker-compose
+        state: present
+        update_cache: yes
+
+    - name: Reload systemd to recognize Docker service
+      command: systemctl daemon-reload
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user to docker group
+      user:
+        name: root
+        groups: docker
+        append: yes
+
+    - name: Clone the repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: master
+        force: yes
+
+    - name: Create .env file with server ID to see in browser lala
+      copy:
+        content: "SERVER_ID={{ hostvars[inventory_hostname]['server_id'] }}"
+        dest: "{{ app_dir }}/.env"
+
+    - name: Stop existing containers
+      command: docker-compose down
+      args:
+        chdir: "{{ app_dir }}"
+      ignore_errors: yes
+
+    - name: Build and start the app
+      command: docker-compose up -d --build
+      args:
+        chdir: "{{ app_dir }}"
+
+    - name: Show running containers
+      command: docker ps
+      register: docker_ps
+
+    - name: Display running containers
+      debug:
+        var: docker_ps.stdout_lines
+
+- name: Configure Nginx as a reverse proxy
+  hosts: loadbalancer
+  become: true
+
+  tasks:
+    - name: Install Nginx inshallah
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Configure Nginx
+      copy:
+        dest: /etc/nginx/sites-available/canva.conf
+        content: |
+          # Redirect HTTP to HTTPS
+          server {
+              listen 80;
+              server_name mohamedlala.online;
+              return 301 https://$host$request_uri;
+          }
+
+          server {
+              listen 443 ssl;
+              server_name mohamedlala.online;
+
+              ssl_certificate /etc/letsencrypt/live/mohamedlala.online/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/mohamedlala.online/privkey.pem;
+
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_prefer_server_ciphers on;
+              ssl_ciphers HIGH:!aNULL:!MD5;
+
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+
+    - name: Enable the Nginx configuration
+      file:
+        src: /etc/nginx/sites-available/canva.conf
+        dest: /etc/nginx/sites-enabled/canva.conf
+        state: link
+        force: yes
+
+    - name: Remove default site if exists
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: Test Nginx configuration
+      command: nginx -t
+
+    - name: Restart Nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
