@@ -1,0 +1,113 @@
+---
+- name: Cleanup and remove deployed application
+  hosts: appservers
+  become: true
+  vars:
+    app_dir: /opt/canva
+
+  tasks:
+    - name: Check if application directory exists
+      stat:
+        path: "{{ app_dir }}"
+      register: app_dir_stat
+
+    - name: Stop and remove Docker containers
+      command: docker-compose down
+      args:
+        chdir: "{{ app_dir }}"
+      when: app_dir_stat.stat.exists
+      ignore_errors: yes
+
+    - name: Remove all Docker containers (force)
+      shell: docker rm -f $(docker ps -aq) 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Remove Docker images related to the app
+      shell: docker rmi -f $(docker images -q canva*) 2>/dev/null || true
+      ignore_errors: yes
+
+    - name: Remove application directory
+      file:
+        path: "{{ app_dir }}"
+        state: absent
+
+    - name: Remove .env file if exists
+      file:
+        path: "{{ app_dir }}/.env"
+        state: absent
+      ignore_errors: yes
+
+    - name: Optional - Remove Docker (uncomment if needed)
+      # apt:
+      #   name:
+      #     - docker.io
+      #     - docker-compose
+      #   state: absent
+      #   autoremove: yes
+      debug:
+        msg: "Docker packages not removed. Uncomment task to remove."
+
+    - name: Optional - Remove git (uncomment if needed)
+      # apt:
+      #   name: git
+      #   state: absent
+      debug:
+        msg: "Git not removed. Uncomment task to remove."
+
+    - name: Clean up unused Docker resources
+      command: docker system prune -af --volumes
+      ignore_errors: yes
+
+- name: Cleanup Nginx load balancer configuration
+  hosts: loadbalancer
+  become: true
+
+  tasks:
+    - name: Stop Nginx service
+      service:
+        name: nginx
+        state: stopped
+      ignore_errors: yes
+
+    - name: Remove Nginx site configuration
+      file:
+        path: /etc/nginx/sites-enabled/canva.conf
+        state: absent
+
+    - name: Remove Nginx site configuration from available
+      file:
+        path: /etc/nginx/sites-available/canva.conf
+        state: absent
+
+    - name: Restore default Nginx site (optional)
+      file:
+        src: /etc/nginx/sites-available/default
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      ignore_errors: yes
+
+    - name: Optional - Remove Nginx (uncomment if needed)
+      # apt:
+      #   name: nginx
+      #   state: absent
+      #   autoremove: yes
+      debug:
+        msg: "Nginx not removed. Uncomment task to remove if complete removal is needed."
+
+    - name: Test Nginx configuration (if Nginx still installed)
+      command: nginx -t
+      ignore_errors: yes
+
+    - name: Restart Nginx if still installed
+      service:
+        name: nginx
+        state: restarted
+      ignore_errors: yes
+      when: false # Set to true if you want to restart instead of remove
+
+- name: Display cleanup summary
+  hosts: all
+  tasks:
+    - name: Cleanup complete
+      debug:
+        msg: "Cleanup completed for {{ inventory_hostname }}"

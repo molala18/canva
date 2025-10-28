@@ -16,22 +16,17 @@
         name: git
         state: present
 
-    - name: Install Docker inshallah
+    - name: Install Docker
       apt:
         name:
           - docker.io
-          - docker-compose
         state: present
         update_cache: yes
 
-    - name: Reload systemd to recognize Docker service
-      command: systemctl daemon-reload
-
-    - name: Start and enable Docker
-      systemd:
-        name: docker
-        state: started
-        enabled: yes
+    - name: Install docker-compose
+      apt:
+        name: docker-compose
+        state: present
 
     - name: Add current user to docker group
       user:
@@ -39,23 +34,37 @@
         groups: docker
         append: yes
 
+    - name: Ensure app directory exists
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
     - name: Clone the repository
       git:
         repo: "{{ repo_url }}"
         dest: "{{ app_dir }}"
         version: master
         force: yes
+      register: git_result
+
+    - name: Debug git clone result
+      debug:
+        var: git_result
+
+    - name: Check if docker-compose.yml exists
+      stat:
+        path: "{{ app_dir }}/docker-compose.yml"
+      register: compose_file
+
+    - name: Show if compose file exists
+      debug:
+        msg: "docker-compose.yml exists: {{ compose_file.stat.exists }}"
 
     - name: Create .env file with server ID to see in browser lala
       copy:
         content: "SERVER_ID={{ hostvars[inventory_hostname]['server_id'] }}"
         dest: "{{ app_dir }}/.env"
-
-    - name: Stop existing containers
-      command: docker-compose down
-      args:
-        chdir: "{{ app_dir }}"
-      ignore_errors: yes
 
     - name: Build and start the app
       command: docker-compose up -d --build
@@ -85,6 +94,12 @@
       copy:
         dest: /etc/nginx/sites-available/canva.conf
         content: |
+          upstream backend {
+          {% for server in upstream_servers %}
+              server {{ server.host }}:{{ server.port }};
+          {% endfor %}
+          }
+
           # Redirect HTTP to HTTPS
           server {
               listen 80;
@@ -104,7 +119,7 @@
               ssl_ciphers HIGH:!aNULL:!MD5;
 
               location / {
-                  proxy_pass http://localhost:3000;
+                  proxy_pass http://backend;
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection 'upgrade';
@@ -130,9 +145,3 @@
 
     - name: Test Nginx configuration
       command: nginx -t
-
-    - name: Restart Nginx
-      systemd:
-        name: nginx
-        state: restarted
-        enabled: yes

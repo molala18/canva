@@ -9,8 +9,8 @@ ssl_key_path: /etc/letsencrypt/live/mohamedlala.online/privkey.pem
 # App configuration
 app_port: 3000
 app_repo_url: "{{ lookup('pipe', 'git config --get remote.origin.url') }}"
-app_branch: main
-app_directory: /opt/canva-app
+app_branch: master
+app_directory: /opt/canva
 
 # System configuration
 timezone: Africa/Cairo
